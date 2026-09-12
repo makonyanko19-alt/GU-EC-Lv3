@@ -1,0 +1,2 @@
+# Week5 時点では pytest のみ。FastAPI 等は実装着手時に追加する。
+pytest==8.3.4

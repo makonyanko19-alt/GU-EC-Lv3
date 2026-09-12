@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+coverage/
+
+# 環境変数・接続情報（Azure / DB / 決済代行）
+.env
+.env.*
+!.env.example
+*.pem
+
+# エディタ・OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Office の一時ファイル（docx 編集時に生成される）
+~$*.docx
+~$*.xlsx
+~$*.pptx
