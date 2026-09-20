@@ -2,7 +2,7 @@
 
 FastAPIのアプリへ実際にHTTP要求を送り、MySQLに保存された内容まで確認する。
 MySQLが必要なので、環境変数 RUN_IT=1 のときだけ実行する（CIでは自動でスキップ）。
-各ケースの前にカート関連のテーブルを空にする。在庫・商品データは変更しない。
+各ケースの前に注文・カート関連のテーブルを空にする。在庫・商品データは変更しない。
 """
 import os
 
@@ -25,8 +25,10 @@ URL = "/api/v1/carts/current"
 @pytest.fixture(autouse=True)
 def clean_carts():
     with engine.begin() as connection:
-        connection.execute(text("DELETE FROM cart_items"))
-        connection.execute(text("DELETE FROM carts"))
+        # 注文はカートを参照しているので、注文側から順に消す。
+        for table in ("payments", "stock_reservations", "order_items", "orders",
+                      "cart_items", "carts"):
+            connection.execute(text(f"DELETE FROM {table}"))
     yield
 
 
