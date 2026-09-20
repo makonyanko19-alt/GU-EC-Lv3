@@ -1,6 +1,6 @@
-# Package 3：購入画面（Next.js）
+# 購入画面 Next.js
 
-PR #4 マージ後の `main`（`4a9007c`）の FastAPI に合わせた追加パッケージです。
+PR #5としてmainへマージ済みです（マージコミット `15dce7c`）。PR #4で追加したFastAPIに接続します。
 商品詳細 → 裾上げ指定 → カート → 配送先入力・購入確認 → 模擬Wallet決済 → 注文結果をブラウザで操作します。
 
 ## 必要な環境と起動
@@ -36,7 +36,7 @@ npm run dev
 標準設定では `.env.local` の作成は不要です。APIの起動先を変更する場合のみ `frontend/.env.example` を `.env.local` にコピーし、`BACKEND_URL`を調整してNext.jsを再起動します。
 PowerShellでnpm.ps1の実行ポリシーに関するエラーが出た場合は、上記コマンドの `npm` を `npm.cmd` に替えて実行できます。
 
-## 動作確認の順序（本人PCで実施する）
+## 動作確認の順序
 
 1. トップ画面に動作確認用パンツが表示される。
 2. Sサイズ・裾上げあり・ミシン仕上げを選ぶ。方法未選択の間は股下を操作できない。
@@ -77,9 +77,9 @@ CookieはHttpOnlyのままブラウザが管理し、JavaScriptでトークン�
 - 合計 **16件**。HTTP応答を差し替えた画面の単体テストであり、実MySQLの結合テストとは別。
 - 検証環境で `npm test` 16件、`npm run typecheck`、`npm run build` が合格。
 - 本番ビルドのNext.jsとHTTP応答を返す模擬APIを起動し、商品取得・カート・購入確認・注文・注文照会の中継と、HttpOnlyのSet-Cookie/Cookieの受け渡しを確認。実DBのテストではない。
-- 検証用Chromiumの取得がタイムアウトしたため、ブラウザでの通し操作と見た目は未確認。上記の手順で本人PCで確認する。
-- Backendは変更せず、既存の `pytest` は **94 passed, 2 skipped** を確認。IT15件は今回の環境では実行していない。
-- CIにはNode.js 24、Jest、型チェック、Next.jsビルドを設定。GitHub上の実行結果はPR後に確認する。
+- 初回のパッケージ作成環境ではブラウザ確認ができなかったが、その後、本人PCのカート・注文完了画面を確認。S・ミシン74cm・1点で合計1,800円、内税163円。再読み込みや失敗・UNKNOWNの手動確認は記録待ち。
+- パッケージ作成時のBackend通常実行は **94 passed, 2 skipped**。本人PCではPackage 2導入時にIT15件を含め **109 passed** を確認。FrontendのJestは実DBテストとは別。
+- CIにはNode.js 24、Jest、型チェック、Next.jsビルドを設定。PR #5の画面で **2 checks passed** を確認。本人PCでもJest16件とbuildが成功。
 
 ## 現時点の制限
 
@@ -93,20 +93,10 @@ CookieはHttpOnlyのままブラウザが管理し、JavaScriptでトークン�
 - 商品写真は未登録。色やサイズはAPIの選択肢を表示する。
 - Azure対応・公開運用の安全性・ST全件・UAT全件の完了を示すものではない。
 
-## Gitと提出
+## Gitと記録
 
-このパッケージは `frontend/` と `.github/workflows/ci.yml` のみです。Backend・SQL・repo直下READMEは上書きしません。
-動作確認後、repo直下で以下を実行します。
+購入画面の実装コミットは `b9ff351`、PR #5のマージコミットは `15dce7c`。本人PCのmainも更新済みです。
 
-```powershell
-git add frontend .github/workflows/ci.yml
-git diff --cached --stat
-git commit -m "Add purchase UI and UT-WEB tests"
-git push -u origin feature/purchase-ui
-```
-
-PR例：`購入画面とUT-WEB-001〜010（商品・カート・購入確認・注文結果）`。
-本文には本人PCのJest・build・画面操作の結果を記載。CI合格を確認してからマージします。
-rootのREADME・第7版マニュアルには、本人PCで確認した結果と予定変更（9/30ローカル、10/7レビュー、10/14デプロイ）を次の文書更新で反映します。
+現在の全体状況は [repoのREADME](../README.md)、手順・文法・実施記録は [マニュアル第7版](../docs/05_dev_開発準備マニュアル/GU_EC_Lv3_開発準備マニュアル_第7版.docx) を参照してください。変更後の日程は9/30ローカル動作、10/7レビュー、10/14デプロイです。
 
 参考：Next.js公式 [Jest](https://nextjs.org/docs/app/guides/testing/jest) / [rewrites](https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites)
