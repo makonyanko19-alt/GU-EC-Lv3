@@ -2,14 +2,22 @@
 
 Tech0個人宿題。作成者：平田真子（12期）。GUのECサイトを題材に、要求・要件・設計・テスト設計・実装・検証を進める学習用の非公式アプリです。実際の商品購入・課金は行いません。
 
-**PR #5までマージ済みです。** ローカルで商品詳細 → 裾上げ指定 → カート → 購入確認 → 模擬Wallet決済 → 注文完了の画面を確認しました。記録の基準は `15dce7c`。Azureへのデプロイは未実施です。
+**ローカルで購入経路が動作します。** 商品詳細 → 裾上げ指定 → カート → 購入確認 → 模擬Wallet決済 → 注文完了を、ブラウザで確認しました（2026-09-21）。DBは運営のAzure MySQLに自分用のスキーマを作成し、APIから接続できることも確認済みです。Azureへのデプロイは未実施です。
+
+## 全体の流れ（図解）
+
+何を作り、どう確かめたかの全体像です。同じ図はマニュアル第9版の冒頭にもあります。詳しくは図中の章を参照してください。
+
+![図1 何を作り、どう確かめたか](docs/05_dev_開発準備マニュアル/overview_flow.png)
+
+![図2 購入の流れと、それぞれを確かめたテスト](docs/05_dev_開発準備マニュアル/overview_purchase_tests.png)
 
 ## 主題と対象範囲
 
 実機調査（2026/8/27）の課題は、裾上げの可否・料金・追加日数が購入判断の画面で分かりにくいことと、購入手続きの入力負荷です。実装対象を「裾上げを指定し、内容を確認してWalletで購入する」経路に絞っています。
 
 - 画面：Next.js、API：FastAPI、DB：MySQL、テスト：pytest／Jest。
-- 現在のDBはPC上のDockerで動くMySQL 8.4。Azureの接続情報を待つ間も開発を進めるために用意しました。
+- DBは、PC上のDockerで動くMySQL 8.4（開発・テスト用）と、運営のAzure Database for MySQLに作成した自分用のスキーマの2つを、設定ファイルで切り替えて使います。
 - デプロイ先の前提はMicrosoft Azure、DBはAzure Database for MySQL Flexible Server。Vercel・Streamlitは使いません。
 - 会員購入、実Walletとの連携、決済結果不明時の自動確定などは未実装です。業務ルールの単体テストがあっても、対応するAPIが実装済みとは限りません。
 
@@ -19,7 +27,7 @@ Tech0個人宿題。作成者：平田真子（12期）。GUのECサイトを題
 
 | 期限 | 目標 | 現状 |
 |---|---|---|
-| 9/30 | ローカルで動作 | ゲストの模擬購入経路を確認済み。文書を更新中 |
+| 9/30 | ローカルで動作 | ゲストの模擬購入経路を確認済み。Azure MySQLへのスキーマ作成・接続も確認済み |
 | 10/7 | レビュー | 指摘の整理・対応はこれから |
 | 10/14 | デプロイ | Azureへの公開は未実施 |
 
@@ -27,7 +35,7 @@ Tech0個人宿題。作成者：平田真子（12期）。GUのECサイトを題
 
 要求・要件・設計・テスト仕様書は `docs/01_requirements_要求仕様書/` から `docs/04_test_テスト仕様書/` にあります。設計22.1のNode.js・Prisma・PostgreSQLという技術選定は実装と不一致で、改訂が必要です。テスト仕様書はファイル名だけで版を判断せず本文を確認します。
 
-開発手順・文法解説・実施記録は [マニュアル第7版](docs/05_dev_開発準備マニュアル/GU_EC_Lv3_開発準備マニュアル_第7版.docx) にまとめています。旧版の手順は当時の記録です。現在のソースに古い `main.py` の全文を貼り直さないでください。
+開発手順・文法解説・実施記録は [マニュアル第9版](docs/05_dev_開発準備マニュアル/GU_EC_Lv3_開発準備マニュアル_第9版.docx) にまとめています。**この課題を手元で再現する場合は、マニュアル第9版の78章から読んでください。**旧版の手順は当時の記録です。現在のソースに古い `main.py` の全文を貼り直さないでください。
 
 ## 実装済みのAPI
 
@@ -116,18 +124,17 @@ Next.jsが `/api/v1/*` をFastAPIへ中継します。標準設定ではFrontend
 
 ## 動作確認の記録
 
-本人PCのカート画面と注文完了画面で、以下を確認しました。
+2026-09-21に、本人PCのブラウザで購入経路を操作して確認しました。詳細は [動作確認記録](docs/05_dev_開発準備マニュアル/動作確認記録_20260921.md) とマニュアル第9版71〜73章にあります。
 
-| 項目 | 表示 |
-|---|---|
-| 商品 | 動作確認用パンツ、ブラック、S、1点 |
-| 裾上げ | ミシン仕上げ、股下74cm |
-| 商品・裾上げ・送料 | 1,000円・300円・500円 |
-| 合計・内税 | 1,800円・163円 |
-| 注文番号 | GU20260921-132834 |
-| 配送予定日 | 2026-09-28 |
+| 区分 | 確認内容 | 結果 |
+|---|---|---|
+| 通常操作 | 裾上げ範囲の表示と入力エラー、明細の合算・分割、数量変更・削除、金額、入力不足、注意表示、注文、再読み込み、注文後の空カート、他人の注文の非表示の13項目 | すべて合格 |
+| 決済失敗 | `WALLET_MOCK_RESULT=FAILED` で購入 | 注文は未確定、確保した在庫を解放 |
+| 応答なし | `WALLET_MOCK_RESULT=TIMEOUT` で購入 | 202と確認中の表示、在庫の確保を維持 |
 
-配送日と注文番号はその実行時の記録で、固定の期待値ではありません。注文ページの再読み込み、失敗・UNKNOWNの手動操作は、この記録では確認済みに含めていません。
+代表例として、S・ミシン仕上げ・股下74cm・1点の注文（GU20260921-200425）は、商品1,000円＋裾上げ300円＋送料500円＝合計1,800円、うち消費税163円、配送予定日2026-09-28でした。配送日と注文番号はその実行時の記録で、固定の期待値ではありません。
+
+Windowsでは、ターミナルを閉じただけでは前回のサーバーが残り、新しい設定が効かないことがあります。止め方はマニュアル第9版73章を参照してください。
 
 ## テスト
 
@@ -222,11 +229,54 @@ git --no-pager diff --cached --stat
 
 `--no-pager` はlessの閲覧画面を開かない指定です。`.env`、`.venv`、`node_modules`、`.next` はコミットしません。
 
-## DockerからAzureへ移すとき
+## 運営のAzure MySQLを使う
 
-今回使っているのは、PC上の標準MySQLコンテナです。Azure専用エミュレーターではなく、Azure上でコンテナを動かしているわけでもありません。同じMySQLのSQLと接続ライブラリを使えるため、業務処理を先に作れます。
+課題の条件に合わせ、運営が用意したAzure Database for MySQL（フレキシブルサーバー）に自分用のスキーマ `gu_ec_mako` を作成しています。詳しい手順と、つまずいたときの対処はマニュアル第9版76・77章にあります。サーバー名・ユーザー名・パスワードは運営から共有されたものを使い、このリポジトリには書きません。
 
-移行時はAzureのMySQL版・権限・接続許可・TLSを確認し、スキーマと必要なデータを用意します。Dockerのデータは自動では移りません。現行 `db.py` はローカル用で、Azure向けTLS設定の確認・追加も必要です。`URL.create()` へパスワードを部品として渡すため、`@` を `%40` に書き換える必要はありません。
+**1. スキーマとテーブルを作る**（初回だけ）
+
+Dockerのmysqlコマンドを借りて接続します。パスワードはコマンドに書かず、入力を求められたときに貼り付けます。
+
+```powershell
+docker compose up -d db
+foreach ($f in "001_product_tables","002_alteration_tables","003_seed_product","004_cart_tables","005_order_tables") { docker compose cp "./scripts/sql/$f.sql" "db:/tmp/$f.sql" }
+docker compose exec db mysql --default-character-set=utf8mb4 -h <サーバー名>.mysql.database.azure.com -u <ユーザー名> -p --ssl-mode=REQUIRED
+```
+
+```sql
+CREATE DATABASE gu_ec_mako CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SOURCE /tmp/001_product_tables.sql;
+SOURCE /tmp/002_alteration_tables.sql;
+SOURCE /tmp/003_seed_product.sql;
+COMMIT;
+SOURCE /tmp/004_cart_tables.sql;
+SOURCE /tmp/005_order_tables.sql;
+SHOW TABLES;
+```
+
+`--default-character-set=utf8mb4` を省くと日本語が化けて保存されます。共有サーバーなので、他の人は `gu_ec_mako` ではなく自分用の名前を使ってください（マニュアル78章7節）。
+
+**2. `.env.azure` を作る**（repo直下。`.gitignore` で除外済み）
+
+```
+MYSQL_HOST=<サーバー名>.mysql.database.azure.com
+MYSQL_PORT=3306
+MYSQL_DATABASE=gu_ec_mako
+MYSQL_USER=<ユーザー名>
+MYSQL_PASSWORD=<パスワード>
+MYSQL_SSL=true
+```
+
+パスワードは引用符で囲まずに書きます。`db.py` は `URL.create()` で値を部品ごとに渡すため、パスワードに `&` や `@` が含まれていても、接続URLの区切りと誤解されません。
+
+**3. Azureへ接続してAPIを起動する**
+
+```powershell
+$env:APP_ENV_FILE = ".env.azure"
+.\.venv\Scripts\python.exe -m uvicorn main:app --app-dir backend --reload --reload-dir backend
+```
+
+`MYSQL_SSL=true` のとき、`db.py` はcertifiの証明書一覧でサーバーを検証してTLS接続します。ローカルへ戻すときは、Ctrl+Cで止めて `Remove-Item Env:APP_ENV_FILE` を実行してから起動し直します。**`APP_ENV_FILE` を指定したまま結合テスト（`RUN_IT=1`）を実行しないでください。** テストが接続先の注文・カートを削除します。
 
 ## 参考
 
